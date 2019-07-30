@@ -47,8 +47,66 @@ public class Main extends Application{
 			launch(); // starts the game
 		}
 		
+		/* @param vertical true if ship is vertical, false if horizontal
+		 * @param length length of the ship
+		 * @param board board to work on
+		 * @param startX start x coordinate of ship
+		 * @param startY start y coordinate of ship
+		 * @return true if it's ok to place this ship, false if not
+		 */
+		private boolean canPlace(boolean vertical, int length, int[][] board, int startX, int startY)
+		{
+			boolean withinBounds = false; // flags for two parts of method
+			boolean spaceEmpty = true;
+			boolean passed = false; // flag to return
+			
+			if (vertical == true)
+			{
+				if (startY + length <= 10) // checks if extending length vertically would push out of bounds (over 10)
+				{
+					withinBounds = true;
+				}
+		}
+			else
+			{
+				if (startX + length <= 10) // checks if extending length horizontally would push out of bounds
+				{
+					withinBounds = true;
+				}
+			}
+			
+			
+			if (withinBounds == true) // part 2 of checking
+			{
+				for (int l = 0; l < length; l++) // loops through each space potential ship will occupy
+				{
+					if (vertical == true)
+					{
+						if (board[startX][startY+l] != 0) //checks if space is non 0, ie already filled (by existing ship)
+						{
+							spaceEmpty = false;
+						}
+					}
+					else
+					{
+						if (board[startX + l][startY] != 0) //checks if space is non 0, ie already filled (by existing ship)
+						{
+							spaceEmpty = false;
+						}
+					}
+				}
+			}
+			
+			if (withinBounds == true && spaceEmpty == true) // passes if both tests are true
+			{
+				passed = true;
+			}
+			return passed;
+		}
 		@Override
-		public void start(Stage game) throws Exception { // begins immidiately
+		public void start(Stage game) throws Exception // begins immediately
+		{
+			
 			game.setTitle("Battleships");
 			game.setScene(new Scene(runGame(10), 1536, 864)); // creates the window, 10 being grid size, 1536x864 being a standard scaled down resolution
 			game.show();
@@ -62,12 +120,12 @@ public class Main extends Application{
 			{
 				for (int j = 0; j < gSize; j++)
 				{
-					Sea thisSea = new Sea(); // thisSea will be used to refer to induvidual tiles
+					Sea thisSea = new Sea(); // thisSea will be used to refer to individual tiles
 					thisSea.setX((50*i)+50); // draws the sea tiles
 					thisSea.setY((50*j)+50);
 					thisSea.x = i;
 					thisSea.y = j;
-					thisSea.setWidth(45); // sets propeties of sea
+					thisSea.setWidth(45); // sets properties of sea
 					thisSea.setHeight(45);
 					thisSea.setCursor(Cursor.HAND); // cursor will be a hand when hovered to show that its clickable
 					thisSea.setFill(Color.DARKBLUE);
@@ -101,45 +159,14 @@ public class Main extends Application{
 								boatHPPlayer[shipsPlaced+1] = 2;
 							}
 							
-							Boolean potentialLegalSpace = false; // sets variables for validation
-							Boolean legalSpace = false;
-							int legalSpaceCount = 0;
 							currentX = thisSea.x; // converts thisSea coordinates to variables for easier use (resets with every click)
 							currentY = thisSea.y;
 							
-							if (!event.isShiftDown() && thisSea.x + length <=10) // shift being held triggers code to place a ship vertically
-							{ // line above adds the length to the start of the ship (where the user clicked) and tests to see if it's out of bounds
-								potentialLegalSpace = true;
-							}
-							else if (event.isShiftDown() && thisSea.y + length <=10) // this tests for vertical ships
-							{
-								potentialLegalSpace = true;
-							}
-							
-							if (potentialLegalSpace == true) // validates spaces that do not immidiately lead out of bounds
-							{
-								for (int k = 0; k < length; k++)
-								{
-									if(!event.isShiftDown())
-									{
-										if (board[thisSea.x+k][thisSea.y] == 0) // for horizontal ships
-										{ // loops through all spaces where this ship is being placed to check they're empty
-											legalSpaceCount++;
-										}
-									}
-									else {
-										if (board[thisSea.x][thisSea.y+k] == 0) // for vertical ships
-										{
-											legalSpaceCount++;
-										}
-									}
-								}
-							}
-							
-							if (legalSpaceCount == length) // triggers if every sea tile checked is legal
-							{
-								legalSpace = true; // guaranteed indicator
-							}
+							// vertical/horizontal
+							// length of ship to place
+							// board to work with
+							// x/y of where new ship starts
+							boolean legalSpace = canPlace(event.isShiftDown(), length, board, thisSea.x, thisSea.y);
 							
 							if (legalSpace == true)
 							{
@@ -148,8 +175,8 @@ public class Main extends Application{
 								
 								if (!event.isShiftDown()) // creates horizontal ships
 								{
-									thisSea.setWidth((50*length)-5); // sets up tiles accordingly
-									thisSea.setHeight(45);							
+									thisSea.setWidth((50 * length)-5); // sets up tiles accordingly
+									thisSea.setHeight(45); 							
 									for (int k = 0; k < length; k++) {						
 										board[thisSea.x+k][thisSea.y] = shipsPlaced+1;				
 									}							
@@ -194,7 +221,7 @@ public class Main extends Application{
 					thisSeaCom.setWidth(45);
 					thisSeaCom.setHeight(45);
 					thisSeaCom.setCursor(Cursor.HAND);
-					thisSeaCom.setFill(Color.GREY);	// differect colour to allied, otherwise the same creation
+					thisSeaCom.setFill(Color.GREY);	// different colour to allied, otherwise the same creation
 					
 					
 					thisSeaCom.setOnMouseClicked(event->{ // when the user shoots at a com ship
@@ -271,10 +298,7 @@ public class Main extends Application{
 				Random rng = new Random(); // sets up rng
 				int x = rng.nextInt(10); // generates random coordinates
 				int y = rng.nextInt(10);
-				Boolean cpuHorizontal = rng.nextBoolean(); // randomly desides if current ship being placed is  vertical or horizontal
-				Boolean potentialLegalSpace = false;
-				Boolean legalSpace = false;
-				int legalSpaceCount = 0;
+				Boolean cpuHorizontal = rng.nextBoolean(); // randomly decides if current ship being placed is  vertical or horizontal
 				
 				if (carriersCom > 0) // variant of code above, checks each ship type and places accordingly
 				{
@@ -302,38 +326,7 @@ public class Main extends Application{
 					boatHPCom[shipsPlacedCom+1] = 2;
 				}
 				
-				if (cpuHorizontal == true && x + lengthCPU <= 10) // legal space validation is the same with the computers variables
-				{
-					potentialLegalSpace = true;
-				}
-				else if (cpuHorizontal == false && y + lengthCPU <= 10) // checks are the same as above swapping out the user input isShiftDown for a variable to determine the same
-				{
-					potentialLegalSpace = true;
-				}
-				
-				if (potentialLegalSpace == true) 
-				{
-					for (int k = 0; k < lengthCPU; k++) 
-					{
-						if (cpuHorizontal == true) 
-						{							
-							if (cpuBoard[x+k][y] == 0) 
-							{								
-								legalSpaceCount++;										
-							}							
-						}
-						else 
-						{							
-							if (cpuBoard[x][y+k] == 0) 
-							{								
-								legalSpaceCount++;									
-							}				
-						}						
-					}
-					if (legalSpaceCount == lengthCPU) 
-					{
-						legalSpace = true;
-					}
+				boolean legalSpace = canPlace(!cpuHorizontal, lengthCPU, cpuBoard, x, y);
 					
 					//validation complete, last thing is to create the coms ships
 					if (legalSpace == true) 
@@ -352,7 +345,9 @@ public class Main extends Application{
 					}
 				}
 				
-			}
+		
+
+
 			
 			
 			return group;
